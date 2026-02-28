@@ -1,0 +1,59 @@
+export interface DailyEntry {
+    date: string; // YYYY-MM-DD format
+    dailyWage: number;
+    shiftHours: number;
+    actualHours: number;
+    overtimeHours: number;
+    overtimeMultiplier: number;
+    notes: string;
+}
+
+export interface MonthlyStats {
+    totalWorkingDays: number;
+    totalLeaveDays: number;
+    totalShiftHours: number;
+    totalActualHours: number;
+    totalOvertimeHours: number;
+    totalBaseSalary: number;
+    totalOvertimePay: number;
+    finalTotalSalary: number;
+}
+
+export function calculateDailySalary(entry: DailyEntry): { base: number; overtime: number; total: number } {
+    const hourlyRate = entry.dailyWage / entry.shiftHours;
+    const basePay = (entry.dailyWage / entry.shiftHours) * Math.min(entry.actualHours, entry.shiftHours);
+    const overtimePay = entry.overtimeHours * hourlyRate * entry.overtimeMultiplier;
+
+    return {
+        base: basePay,
+        overtime: overtimePay,
+        total: basePay + overtimePay
+    };
+}
+
+export function calculateMonthlyStats(entries: DailyEntry[], daysInMonth: number): MonthlyStats {
+    const stats: MonthlyStats = {
+        totalWorkingDays: 0,
+        totalLeaveDays: daysInMonth - entries.length,
+        totalShiftHours: 0,
+        totalActualHours: 0,
+        totalOvertimeHours: 0,
+        totalBaseSalary: 0,
+        totalOvertimePay: 0,
+        finalTotalSalary: 0,
+    };
+
+    entries.forEach(entry => {
+        stats.totalWorkingDays += 1;
+        stats.totalShiftHours += entry.shiftHours;
+        stats.totalActualHours += entry.actualHours;
+        stats.totalOvertimeHours += entry.overtimeHours;
+
+        const { base, overtime, total } = calculateDailySalary(entry);
+        stats.totalBaseSalary += base;
+        stats.totalOvertimePay += overtime;
+        stats.finalTotalSalary += total;
+    });
+
+    return stats;
+}

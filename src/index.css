@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --void-bg: #050505;
+    --neon-cyan: #00f3ff;
+    --neon-purple: #bc13fe;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-surface: rgba(20, 20, 20, 0.6);
+  }
+
+  body {
+    background-color: var(--void-bg);
+    color: #f3f4f6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  .bg-glow-purple {
+    background: radial-gradient(circle at center, rgba(188, 19, 254, 0.15) 0%, transparent 60%);
+    filter: blur(80px);
+  }
+
+  .bg-glow-cyan {
+    background: radial-gradient(circle at center, rgba(0, 243, 255, 0.15) 0%, transparent 60%);
+    filter: blur(80px);
+  }
+
+  .stitch-border {
+    border: 1px dashed var(--glass-border);
+  }
+
+  .stitch-card {
+    background: var(--glass-surface);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 4px;
+    /* Sharp corners */
+  }
+
+  .text-gradient {
+    background: linear-gradient(to right, var(--neon-cyan), var(--neon-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
