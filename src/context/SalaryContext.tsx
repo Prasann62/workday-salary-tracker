@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { DailyEntry, MonthlyStats, calculateMonthlyStats } from '../utils/calculations';
+import { DailyEntry, MonthlyStats, calculateMonthlyStats, PlannedEvent } from '../utils/calculations';
 import { getDaysInMonth, parseISO } from 'date-fns';
 
 interface SalaryContextType {
@@ -15,6 +15,9 @@ interface SalaryContextType {
         defaultShiftHours: number;
     };
     updateUserSettings: (settings: { defaultWage: number; defaultShiftHours: number }) => void;
+    plannedEvents: Record<string, PlannedEvent[]>;
+    savePlannedEvent: (event: PlannedEvent) => void;
+    deletePlannedEvent: (eventId: string, date: string) => void;
 }
 
 const SalaryContext = createContext<SalaryContextType | undefined>(undefined);
@@ -22,6 +25,11 @@ const SalaryContext = createContext<SalaryContextType | undefined>(undefined);
 export function SalaryProvider({ children }: { children: ReactNode }) {
     const [entries, setEntries] = useState<Record<string, DailyEntry>>(() => {
         const saved = localStorage.getItem('salary_entries');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    const [plannedEvents, setPlannedEvents] = useState<Record<string, PlannedEvent[]>>(() => {
+        const saved = localStorage.getItem('salary_planned_events');
         return saved ? JSON.parse(saved) : {};
     });
 
@@ -41,6 +49,10 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
     }, [entries]);
 
     useEffect(() => {
+        localStorage.setItem('salary_planned_events', JSON.stringify(plannedEvents));
+    }, [plannedEvents]);
+
+    useEffect(() => {
         localStorage.setItem('theme', theme);
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
@@ -55,6 +67,29 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
 
     const saveEntry = (entry: DailyEntry) => {
         setEntries(prev => ({ ...prev, [entry.date]: entry }));
+    };
+
+    const savePlannedEvent = (event: PlannedEvent) => {
+        setPlannedEvents(prev => {
+            const dateEvents = prev[event.date] || [];
+            const existingIndex = dateEvents.findIndex(e => e.id === event.id);
+            if (existingIndex >= 0) {
+                const updated = [...dateEvents];
+                updated[existingIndex] = event;
+                return { ...prev, [event.date]: updated };
+            }
+            return { ...prev, [event.date]: [...dateEvents, event] };
+        });
+    };
+
+    const deletePlannedEvent = (eventId: string, date: string) => {
+        setPlannedEvents(prev => {
+            if (!prev[date]) return prev;
+            return {
+                ...prev,
+                [date]: prev[date].filter(e => e.id !== eventId)
+            };
+        });
     };
 
     const deleteEntry = (date: string) => {
@@ -95,7 +130,10 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
         theme,
         toggleTheme,
         userSettings,
-        updateUserSettings
+        updateUserSettings,
+        plannedEvents,
+        savePlannedEvent,
+        deletePlannedEvent
     };
 
     return <SalaryContext.Provider value={value}>{children}</SalaryContext.Provider>;

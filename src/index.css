@@ -48,3 +48,60 @@
     background-clip: text;
   }
 }
+
+/* Template Calendar Overrides */
+:root .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.1);
+  --fc-non-business-color: rgba(255, 255, 255, 0.05);
+  --fc-button-bg-color: var(--neon-cyan);
+  --fc-button-border-color: var(--neon-cyan);
+  --fc-button-hover-bg-color: var(--neon-cyan);
+  --fc-button-hover-border-color: var(--neon-cyan);
+  --fc-button-active-bg-color: var(--neon-cyan);
+  --fc-button-active-border-color: var(--neon-cyan);
+  --fc-neutral-bg-color: rgba(255, 255, 255, 0.1);
+  --fc-neutral-text-color: #f3f4f6;
+  --fc-page-bg-color: transparent;
+}
+
+#external-events .fc-event {
+  text-align: left;
+  padding: 8px 16px;
+  @apply cursor-pointer rounded-sm flex items-center font-medium;
+}
+
+.fc-event.fc-event-dragging {
+  text-align: left;
+  padding: 8px 16px;
+  @apply cursor-pointer rounded-sm flex items-center font-medium;
+}
+
+.fc-daygrid-day-events {
+  @apply flex flex-col;
+}
+
+.fc-event {
+  @apply bg-current;
+  opacity: 0.2;
+}
+
+.fc-event-draggable.fc-event {
+  padding: 4px 4px;
+  @apply text-current border-none rounded-sm font-medium py-1.5 px-3 mt-2;
+}
+
+.fc-daygrid-event-dot {
+  @apply hidden border-current;
+}
+
+.fc-event-main {
+  @apply !text-current;
+}
+
+.fc-button {
+  @apply !capitalize !flex items-center;
+}
+
+.fc .fc-button-primary:focus {
+  @apply !shadow-none;
+}

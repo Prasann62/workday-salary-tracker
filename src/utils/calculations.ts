@@ -1,3 +1,12 @@
+export type EventCategory = 'primary' | 'success' | 'danger' | 'info' | 'warning';
+
+export interface PlannedEvent {
+    id: string;
+    date: string;
+    title: string;
+    category: EventCategory;
+}
+
 export interface DailyEntry {
     date: string; // YYYY-MM-DD format
     dailyWage: number;
