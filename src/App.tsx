@@ -4,10 +4,12 @@ import { DashboardStats } from './components/DashboardStats';
 import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import { addMonths, subMonths, format } from 'date-fns';
 import { FutureCalendar } from './components/FutureCalendar';
+import { SettingsModal } from './components/SettingsModal';
 
 function App() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [activeTab, setActiveTab] = useState<'dashboard' | 'planning'>('dashboard');
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const handlePrevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
     const handleNextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
@@ -44,7 +46,10 @@ function App() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button className="p-2 text-gray-400 hover:text-white rounded hover:bg-white/5 transition-colors border border-transparent hover:border-white/10">
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="p-2 text-gray-400 hover:text-white rounded hover:bg-white/5 transition-colors border border-transparent hover:border-white/10"
+                        >
                             <Settings className="w-5 h-5" />
                         </button>
                     </div>
@@ -106,6 +111,10 @@ function App() {
                 )}
 
             </main>
+
+            {isSettingsOpen && (
+                <SettingsModal onClose={() => setIsSettingsOpen(false)} />
+            )}
         </div>
     );
 }
