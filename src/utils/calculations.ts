@@ -15,7 +15,17 @@ export interface DailyEntry {
     overtimeHours: number;
     overtimeMultiplier: number;
     notes: string;
+    tags?: string[];
 }
+
+export const PREDEFINED_TAGS = [
+    'WFH',
+    'Office',
+    'Sick Leave',
+    'Holiday',
+    'Overtime',
+    'Important'
+];
 
 export interface MonthlyStats {
     totalWorkingDays: number;

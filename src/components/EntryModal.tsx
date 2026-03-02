@@ -3,6 +3,7 @@ import { useSalary } from '../context/SalaryContext';
 import { X, Trash2, Save } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
+import { PREDEFINED_TAGS } from '../utils/calculations';
 
 export function EntryModal({ date, onClose }: { date: string, onClose: () => void }) {
     const { getEntry, saveEntry, deleteEntry, userSettings } = useSalary();
@@ -14,7 +15,17 @@ export function EntryModal({ date, onClose }: { date: string, onClose: () => voi
         actualHours: existingEntry?.actualHours ?? userSettings.defaultShiftHours,
         overtimeMultiplier: existingEntry?.overtimeMultiplier ?? 1.5,
         notes: existingEntry?.notes ?? '',
+        tags: existingEntry?.tags ?? [],
     });
+
+    const toggleTag = (tag: string) => {
+        setFormData(prev => ({
+            ...prev,
+            tags: prev.tags.includes(tag)
+                ? prev.tags.filter(t => t !== tag)
+                : [...prev.tags, tag]
+        }));
+    };
 
     // Calculate dynamic overtime if actual hours exceed shift hours
     const overtimeHours = formData.actualHours > formData.shiftHours
@@ -36,7 +47,8 @@ export function EntryModal({ date, onClose }: { date: string, onClose: () => voi
             actualHours: Number(formData.actualHours),
             overtimeHours,
             overtimeMultiplier: Number(formData.overtimeMultiplier),
-            notes: formData.notes
+            notes: formData.notes,
+            tags: formData.tags
         });
 
         onClose();
@@ -141,6 +153,26 @@ export function EntryModal({ date, onClose }: { date: string, onClose: () => voi
                     )}
 
                     <div className="relative z-10">
+                        <label className={labelClassName}>Tags</label>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {PREDEFINED_TAGS.map(tag => {
+                                const isSelected = formData.tags.includes(tag);
+                                return (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={() => toggleTag(tag)}
+                                        className={`px-3 py-1 text-[10px] font-bold tracking-widest uppercase rounded-sm border transition-all ${isSelected
+                                            ? 'bg-[#00f3ff]/20 border-[#00f3ff] text-[#00f3ff] shadow-[0_0_10px_rgba(0,243,255,0.3)]'
+                                            : 'bg-[#050505] border-white/10 text-gray-500 hover:border-white/30 hover:text-gray-300'
+                                            }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
                         <label className={labelClassName}>Protocol Notes</label>
                         <textarea
                             name="notes"

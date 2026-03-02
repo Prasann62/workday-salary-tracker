@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useSalary } from '../context/SalaryContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { startOfMonth, endOfMonth, eachWeekOfInterval, isSameMonth, parseISO, isWithinInterval } from 'date-fns';
-import { IndianRupee, Clock, CalendarIcon, Activity } from 'lucide-react';
+import { IndianRupee, Clock, CalendarIcon, Activity, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function DashboardStats({ currentMonth }: { currentMonth: Date }) {
@@ -40,6 +40,25 @@ export function DashboardStats({ currentMonth }: { currentMonth: Date }) {
     const expectedSalary = stats.totalBaseSalary + stats.totalOvertimePay;
     const targetSalary = 50000; // Example target, could be from user settings
     const progressPercent = Math.min((expectedSalary / targetSalary) * 100, 100);
+
+    // Calculate tag distribution
+    const tagDistribution = useMemo(() => {
+        const counts: Record<string, number> = {};
+        Object.values(entries).forEach(entry => {
+            const entryDate = parseISO(entry.date);
+            if (isSameMonth(entryDate, currentMonth) && entry.tags) {
+                entry.tags.forEach(tag => {
+                    counts[tag] = (counts[tag] || 0) + 1;
+                });
+            }
+        });
+
+        // Convert to array and sort by count descending
+        return Object.entries(counts)
+            .map(([name, value]) => ({ name, value }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 5); // top 5 tags
+    }, [entries, currentMonth]);
 
     return (
         <div className="space-y-6">
@@ -103,38 +122,69 @@ export function DashboardStats({ currentMonth }: { currentMonth: Date }) {
                     </div>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    className="stitch-card p-6 flex flex-col justify-between"
-                >
-                    <div>
-                        <h3 className="text-sm font-bold font-sans tracking-widest uppercase text-gray-300 mb-2">Cycle Projection</h3>
-                        <p className="text-xs text-gray-500 mb-8 border-b border-dashed border-white/10 pb-4">Target: ₹{targetSalary.toLocaleString()}</p>
+                <div className="space-y-6 flex flex-col">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                        className="stitch-card p-6 flex-1 flex flex-col justify-between"
+                    >
+                        <div>
+                            <h3 className="text-sm font-bold font-sans tracking-widest uppercase text-gray-300 mb-2">Cycle Projection</h3>
+                            <p className="text-xs text-gray-500 mb-6 border-b border-dashed border-white/10 pb-4">Target: ₹{targetSalary.toLocaleString()}</p>
 
-                        <div className="relative pt-1">
-                            <div className="flex mb-3 items-center justify-between">
-                                <div>
-                                    <span className="text-[10px] font-bold inline-block py-1 px-2 uppercase rounded-sm text-neon-cyan border border-neon-cyan/30 bg-neon-cyan/10 shadow-[0_0_8px_rgba(0,243,255,0.2)]">
-                                        {progressPercent.toFixed(1)}%
-                                    </span>
+                            <div className="relative pt-1">
+                                <div className="flex mb-3 items-center justify-between">
+                                    <div>
+                                        <span className="text-[10px] font-bold inline-block py-1 px-2 uppercase rounded-sm text-neon-cyan border border-neon-cyan/30 bg-neon-cyan/10 shadow-[0_0_8px_rgba(0,243,255,0.2)]">
+                                            {progressPercent.toFixed(1)}%
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-sm bg-white/5 border border-white/10">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progressPercent}%` }}
+                                        transition={{ duration: 1, delay: 0.8 }}
+                                        className="shadow-[0_0_10px_rgba(0,243,255,0.6)] flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-cyan-purple"
+                                    ></motion.div>
                                 </div>
                             </div>
-                            <div className="overflow-hidden h-2 mb-4 text-xs flex rounded-sm bg-white/5 border border-white/10">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progressPercent}%` }}
-                                    transition={{ duration: 1, delay: 0.8 }}
-                                    className="shadow-[0_0_10px_rgba(0,243,255,0.6)] flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-cyan-purple"
-                                ></motion.div>
-                            </div>
                         </div>
-                    </div>
-                    <div className="mt-4 text-[10px] text-gray-500 uppercase tracking-widest border border-dashed border-white/10 p-2 text-center rounded-sm">
-                        Based on synced logs
-                    </div>
-                </motion.div>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
+                        className="stitch-card p-6 flex-1 flex flex-col"
+                    >
+                        <h3 className="text-sm font-bold font-sans tracking-widest uppercase text-gray-300 mb-4 flex items-center gap-2">
+                            <Tag className="w-4 h-4 text-neon-purple" />
+                            Activity Distribution
+                        </h3>
+
+                        {tagDistribution.length > 0 ? (
+                            <div className="flex-1 space-y-3 mt-2">
+                                {tagDistribution.map((tag, idx) => (
+                                    <div key={idx} className="flex justify-between items-center bg-white/5 p-2 rounded-sm border border-transparent hover:border-white/10 transition-colors">
+                                        <span className="text-xs font-bold tracking-widest uppercase text-gray-300">
+                                            {tag.name}
+                                        </span>
+                                        <span className="text-[10px] font-mono text-[#00f3ff] bg-[#00f3ff]/10 px-2 py-0.5 rounded-sm border border-[#00f3ff]/20 shadow-[0_0_5px_rgba(0,243,255,0.2)]">
+                                            {tag.value} DAYS
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 my-auto py-8">
+                                <Tag className="w-8 h-8 mb-2 text-gray-500" />
+                                <p className="text-[10px] tracking-widest uppercase text-gray-400">No activity tags</p>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
             </div>
         </div>
     );
