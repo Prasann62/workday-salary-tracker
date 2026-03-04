@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { DailyEntry, MonthlyStats, calculateMonthlyStats, PlannedEvent } from '../utils/calculations';
+import { DailyEntry, MonthlyStats, calculateMonthlyStats, calculateYearlyStats, PlannedEvent } from '../utils/calculations';
 import { getDaysInMonth, parseISO } from 'date-fns';
 
 interface SalaryContextType {
@@ -8,6 +8,7 @@ interface SalaryContextType {
     deleteEntry: (date: string) => void;
     getEntry: (date: string) => DailyEntry | undefined;
     getMonthlyStats: (currentMonth: Date) => MonthlyStats;
+    getYearlyStats: (year: number) => MonthlyStats;
     theme: 'light' | 'dark';
     toggleTheme: () => void;
     userSettings: {
@@ -113,6 +114,10 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
         return calculateMonthlyStats(monthlyEntries, daysInMonth);
     };
 
+    const getYearlyStats = (year: number) => {
+        return calculateYearlyStats(Object.values(entries), year);
+    };
+
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
     };
@@ -127,6 +132,7 @@ export function SalaryProvider({ children }: { children: ReactNode }) {
         deleteEntry,
         getEntry,
         getMonthlyStats,
+        getYearlyStats,
         theme,
         toggleTheme,
         userSettings,

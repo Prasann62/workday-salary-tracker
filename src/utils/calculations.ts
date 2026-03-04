@@ -76,3 +76,32 @@ export function calculateMonthlyStats(entries: DailyEntry[], daysInMonth: number
 
     return stats;
 }
+
+export function calculateYearlyStats(entries: DailyEntry[], year: number): MonthlyStats {
+    const stats: MonthlyStats = {
+        totalWorkingDays: 0,
+        totalLeaveDays: 0, // Hard to define for a full year without a schedule
+        totalShiftHours: 0,
+        totalActualHours: 0,
+        totalOvertimeHours: 0,
+        totalBaseSalary: 0,
+        totalOvertimePay: 0,
+        finalTotalSalary: 0,
+    };
+
+    entries.forEach(entry => {
+        if (entry.date.startsWith(`${year}-`)) {
+            stats.totalWorkingDays += 1;
+            stats.totalShiftHours += entry.shiftHours;
+            stats.totalActualHours += entry.actualHours;
+            stats.totalOvertimeHours += entry.overtimeHours;
+
+            const { base, overtime, total } = calculateDailySalary(entry);
+            stats.totalBaseSalary += base;
+            stats.totalOvertimePay += overtime;
+            stats.finalTotalSalary += total;
+        }
+    });
+
+    return stats;
+}

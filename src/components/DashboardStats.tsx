@@ -6,8 +6,9 @@ import { IndianRupee, Clock, CalendarIcon, Activity, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function DashboardStats({ currentMonth }: { currentMonth: Date }) {
-    const { entries, getMonthlyStats } = useSalary();
+    const { entries, getMonthlyStats, getYearlyStats } = useSalary();
     const stats = useMemo(() => getMonthlyStats(currentMonth), [entries, currentMonth, getMonthlyStats]);
+    const yearlyStats = useMemo(() => getYearlyStats(currentMonth.getFullYear()), [entries, currentMonth, getYearlyStats]);
 
     const weeklyData = useMemo(() => {
         const start = startOfMonth(currentMonth);
@@ -62,6 +63,17 @@ export function DashboardStats({ currentMonth }: { currentMonth: Date }) {
 
     return (
         <div className="space-y-6">
+            <div className="stitch-card p-4 flex justify-between items-center bg-white/5 border border-white/10">
+                <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">{currentMonth.getFullYear()} YTD Salary</span>
+                    <span className="text-xl font-bold font-sans text-white">₹{yearlyStats.finalTotalSalary.toLocaleString()}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Yearly Overtime</span>
+                    <span className="text-xl font-bold font-sans text-neon-purple">{yearlyStats.totalOvertimeHours}h</span>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
                     title="Final Salary"

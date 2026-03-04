@@ -1,8 +1,63 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Download, Upload } from 'lucide-react';
+import { X, Download, Upload, FileText, Table } from 'lucide-react';
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
+    const handleExportCSV = () => {
+        const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
+        const rows = [
+            ['Date', 'Daily Wage', 'Shift Hours', 'Actual Hours', 'Overtime', 'Overtime Multiplier', 'Notes', 'Tags']
+        ];
+
+        Object.values(entries).forEach((entry: any) => {
+            rows.push([
+                entry.date,
+                entry.dailyWage,
+                entry.shiftHours,
+                entry.actualHours,
+                entry.overtimeHours,
+                entry.overtimeMultiplier,
+                `"${(entry.notes || '').replace(/"/g, '""')}"`,
+                `"${(entry.tags || []).join(', ')}"`
+            ]);
+        });
+
+        const csvContent = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workday_backup_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleExportTXT = () => {
+        const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
+        let textContent = `WorkDay Salary Tracker Backup\nDate: ${new Date().toISOString().split('T')[0]}\n\n`;
+
+        Object.values(entries).forEach((entry: any) => {
+            textContent += `--- ${entry.date} ---\n`;
+            textContent += `Worked: ${entry.actualHours}h / ${entry.shiftHours}h\n`;
+            textContent += `Overtime: ${entry.overtimeHours}h\n`;
+            if (entry.notes) textContent += `Notes: ${entry.notes}\n`;
+            if (entry.tags && entry.tags.length > 0) textContent += `Tags: ${entry.tags.join(', ')}\n`;
+            textContent += `\n`;
+        });
+
+        const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workday_backup_${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     const handleExport = () => {
         const data = {
             entries: JSON.parse(localStorage.getItem('salary_entries') || '{}'),
@@ -64,12 +119,26 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                     <div>
                         <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-3">Backup Data</h3>
                         <p className="text-xs text-gray-400 mb-4">Export your salary and schedule data as a JSON file to keep it safe or move between devices.</p>
-                        <button
-                            onClick={handleExport}
-                            className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 hover:shadow-[0_0_15px_rgba(0,243,255,0.2)] rounded-sm text-xs font-bold tracking-widest uppercase transition-all"
-                        >
-                            <Download className="w-4 h-4" /> Export Backup
-                        </button>
+                        <div className="flex flex-col gap-2">
+                            <button
+                                onClick={handleExport}
+                                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 hover:shadow-[0_0_15px_rgba(0,243,255,0.2)] rounded-sm text-xs font-bold tracking-widest uppercase transition-all"
+                            >
+                                <Download className="w-4 h-4" /> Export Backup (JSON)
+                            </button>
+                            <button
+                                onClick={handleExportCSV}
+                                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 hover:shadow-[0_0_15px_rgba(0,243,255,0.2)] rounded-sm text-xs font-bold tracking-widest uppercase transition-all"
+                            >
+                                <Table className="w-4 h-4" /> Export Excel (CSV)
+                            </button>
+                            <button
+                                onClick={handleExportTXT}
+                                className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 hover:shadow-[0_0_15px_rgba(0,243,255,0.2)] rounded-sm text-xs font-bold tracking-widest uppercase transition-all"
+                            >
+                                <FileText className="w-4 h-4" /> Export Note (.TXT)
+                            </button>
+                        </div>
                     </div>
 
                     <div className="pt-6 border-t border-dashed border-white/10">
