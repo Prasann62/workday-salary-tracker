@@ -1,10 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Upload, FileText, Table } from 'lucide-react';
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
-    const handleExportExcel = () => {
+    const [exportStartDate, setExportStartDate] = useState(
+        new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
+    );
+    const [exportEndDate, setExportEndDate] = useState(
+        new Date().toISOString().split('T')[0]
+    );
+
+    const getFilteredEntries = () => {
         const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
+        if (!exportStartDate || !exportEndDate) return entries;
+
+        const filtered: any = {};
+        Object.keys(entries).forEach(date => {
+            if (date >= exportStartDate && date <= exportEndDate) {
+                filtered[date] = entries[date];
+            }
+        });
+        return filtered;
+    };
+
+    const handleExportExcel = () => {
+        const entries = getFilteredEntries();
         let tableHtml = `
             <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
             <head>
@@ -66,7 +86,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
     };
 
     const handleExportTXT = () => {
-        const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
+        const entries = getFilteredEntries();
         let textContent = `WorkDay Salary Tracker Backup\nDate: ${new Date().toISOString().split('T')[0]} \n\n`;
 
         Object.values(entries).forEach((entry: any) => {
@@ -91,7 +111,7 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
     const handleExport = () => {
         const data = {
-            entries: JSON.parse(localStorage.getItem('salary_entries') || '{}'),
+            entries: getFilteredEntries(),
             plannedEvents: JSON.parse(localStorage.getItem('salary_planned_events') || '{}'),
             userSettings: JSON.parse(localStorage.getItem('user_settings') || '{}')
         };
@@ -150,6 +170,28 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                     <div>
                         <h3 className="text-[10px] uppercase tracking-widest font-bold text-gray-500 mb-3">Backup Data</h3>
                         <p className="text-xs text-gray-400 mb-4">Export your salary and schedule data as a JSON file to keep it safe or move between devices.</p>
+
+                        <div className="flex gap-2 mb-4">
+                            <div className="flex-1">
+                                <label className="text-[10px] uppercase tracking-wider text-gray-500 mb-1 block">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={exportStartDate}
+                                    onChange={(e) => setExportStartDate(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 rounded-sm px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#00f3ff]/50 focus:ring-1 focus:ring-[#00f3ff]/50 transition-all font-mono"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-[10px] uppercase tracking-wider text-gray-500 mb-1 block">End Date</label>
+                                <input
+                                    type="date"
+                                    value={exportEndDate}
+                                    onChange={(e) => setExportEndDate(e.target.value)}
+                                    className="w-full bg-black/40 border border-white/10 rounded-sm px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#00f3ff]/50 focus:ring-1 focus:ring-[#00f3ff]/50 transition-all font-mono"
+                                />
+                            </div>
+                        </div>
+
                         <div className="flex flex-col gap-2">
                             <button
                                 onClick={handleExport}
