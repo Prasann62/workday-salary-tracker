@@ -3,31 +3,62 @@ import { motion } from 'framer-motion';
 import { X, Download, Upload, FileText, Table } from 'lucide-react';
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
-    const handleExportCSV = () => {
+    const handleExportExcel = () => {
         const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
-        const rows = [
-            ['Date', 'Daily Wage', 'Shift Hours', 'Actual Hours', 'Overtime', 'Overtime Multiplier', 'Notes', 'Tags']
-        ];
+        let tableHtml = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8" />
+                <style>
+                    table { border-collapse: collapse; }
+                    th, td { border: 1px solid #dddddd; padding: 6px; }
+                    th { font-weight: bold; background-color: #f2f2f2; text-align: left; }
+                </style>
+            </head>
+            <body>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 120px;">Date</th>
+                        <th style="width: 100px;">Daily Wage</th>
+                        <th style="width: 100px;">Shift Hours</th>
+                        <th style="width: 100px;">Actual Hours</th>
+                        <th style="width: 100px;">Overtime</th>
+                        <th style="width: 150px;">Overtime Multiplier</th>
+                        <th style="width: 250px;">Notes</th>
+                        <th style="width: 150px;">Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
 
         Object.values(entries).forEach((entry: any) => {
-            rows.push([
-                entry.date,
-                entry.dailyWage,
-                entry.shiftHours,
-                entry.actualHours,
-                entry.overtimeHours,
-                entry.overtimeMultiplier,
-                `"${(entry.notes || '').replace(/"/g, '""')}"`,
-                `"${(entry.tags || []).join(', ')}"`
-            ]);
+            tableHtml += `
+                <tr>
+                    <td>${entry.date}</td>
+                    <td>${entry.dailyWage}</td>
+                    <td>${entry.shiftHours}</td>
+                    <td>${entry.actualHours}</td>
+                    <td>${entry.overtimeHours}</td>
+                    <td>${entry.overtimeMultiplier}</td>
+                    <td>${(entry.notes || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                    <td>${(entry.tags || []).join(', ').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                </tr>
+            `;
         });
 
-        const csvContent = rows.map(r => r.join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        tableHtml += `
+                </tbody>
+            </table>
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `workday_backup_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = `workday_backup_${new Date().toISOString().split('T')[0]}.xls`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -36,14 +67,14 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
     const handleExportTXT = () => {
         const entries = JSON.parse(localStorage.getItem('salary_entries') || '{}');
-        let textContent = `WorkDay Salary Tracker Backup\nDate: ${new Date().toISOString().split('T')[0]}\n\n`;
+        let textContent = `WorkDay Salary Tracker Backup\nDate: ${new Date().toISOString().split('T')[0]} \n\n`;
 
         Object.values(entries).forEach((entry: any) => {
-            textContent += `--- ${entry.date} ---\n`;
-            textContent += `Worked: ${entry.actualHours}h / ${entry.shiftHours}h\n`;
-            textContent += `Overtime: ${entry.overtimeHours}h\n`;
-            if (entry.notes) textContent += `Notes: ${entry.notes}\n`;
-            if (entry.tags && entry.tags.length > 0) textContent += `Tags: ${entry.tags.join(', ')}\n`;
+            textContent += `-- - ${entry.date} ---\n`;
+            textContent += `Worked: ${entry.actualHours} h / ${entry.shiftHours} h\n`;
+            textContent += `Overtime: ${entry.overtimeHours} h\n`;
+            if (entry.notes) textContent += `Notes: ${entry.notes} \n`;
+            if (entry.tags && entry.tags.length > 0) textContent += `Tags: ${entry.tags.join(', ')} \n`;
             textContent += `\n`;
         });
 
@@ -127,10 +158,10 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
                                 <Download className="w-4 h-4" /> Export Backup (JSON)
                             </button>
                             <button
-                                onClick={handleExportCSV}
+                                onClick={handleExportExcel}
                                 className="w-full px-4 py-2 flex items-center justify-center gap-2 bg-[#00f3ff]/10 text-[#00f3ff] border border-[#00f3ff]/30 hover:bg-[#00f3ff]/20 hover:shadow-[0_0_15px_rgba(0,243,255,0.2)] rounded-sm text-xs font-bold tracking-widest uppercase transition-all"
                             >
-                                <Table className="w-4 h-4" /> Export Excel (CSV)
+                                <Table className="w-4 h-4" /> Export Excel (.XLS)
                             </button>
                             <button
                                 onClick={handleExportTXT}
