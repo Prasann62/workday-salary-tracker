@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Upload, FileText, Table } from 'lucide-react';
 
+declare global {
+    interface Window {
+        XLSX: any;
+    }
+}
+
 export function SettingsModal({ onClose }: { onClose: () => void }) {
     const [exportStartDate, setExportStartDate] = useState(
         new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]
@@ -25,64 +31,47 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
 
     const handleExportExcel = () => {
         const entries = getFilteredEntries();
-        let tableHtml = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-            <head>
-                <meta charset="utf-8" />
-                <style>
-                    table { border-collapse: collapse; }
-                    th, td { border: 1px solid #dddddd; padding: 6px; }
-                    th { font-weight: bold; background-color: #f2f2f2; text-align: left; }
-                </style>
-            </head>
-            <body>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 120px;">Date</th>
-                        <th style="width: 100px;">Daily Wage</th>
-                        <th style="width: 100px;">Shift Hours</th>
-                        <th style="width: 100px;">Actual Hours</th>
-                        <th style="width: 100px;">Overtime</th>
-                        <th style="width: 150px;">Overtime Multiplier</th>
-                        <th style="width: 250px;">Notes</th>
-                        <th style="width: 150px;">Tags</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+
+        // 1. Prepare data rows
+        const rows = [
+            ['Date', 'Daily Wage', 'Shift Hours', 'Actual Hours', 'Overtime', 'Overtime Multiplier', 'Notes', 'Tags']
+        ];
 
         Object.values(entries).forEach((entry: any) => {
-            tableHtml += `
-                <tr>
-                    <td>${entry.date}</td>
-                    <td>${entry.dailyWage}</td>
-                    <td>${entry.shiftHours}</td>
-                    <td>${entry.actualHours}</td>
-                    <td>${entry.overtimeHours}</td>
-                    <td>${entry.overtimeMultiplier}</td>
-                    <td>${(entry.notes || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
-                    <td>${(entry.tags || []).join(', ').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
-                </tr>
-            `;
+            rows.push([
+                entry.date,
+                entry.dailyWage,
+                entry.shiftHours,
+                entry.actualHours,
+                entry.overtimeHours,
+                entry.overtimeMultiplier,
+                entry.notes || '',
+                (entry.tags || []).join(', ')
+            ]);
         });
 
-        tableHtml += `
-                </tbody>
-            </table>
-            </body>
-            </html>
-        `;
+        // 2. Create workbook and worksheet
+        const wb = window.XLSX.utils.book_new();
+        const ws = window.XLSX.utils.aoa_to_sheet(rows);
 
-        const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `workday_backup_${new Date().toISOString().split('T')[0]}.xls`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // 3. Set column widths
+        ws['!cols'] = [
+            { wpx: 120 }, // Date
+            { wpx: 100 }, // Daily Wage
+            { wpx: 100 }, // Shift Hours
+            { wpx: 100 }, // Actual Hours
+            { wpx: 100 }, // Overtime
+            { wpx: 150 }, // Overtime Multiplier
+            { wpx: 250 }, // Notes
+            { wpx: 150 }  // Tags
+        ];
+
+        // 4. Add worksheet to workbook
+        window.XLSX.utils.book_append_sheet(wb, ws, "WorkDay Salary");
+
+        // 5. Generate and download file
+        const fileName = `workday_backup_${new Date().toISOString().split('T')[0]}.xlsx`;
+        window.XLSX.writeFile(wb, fileName);
     };
 
     const handleExportTXT = () => {
